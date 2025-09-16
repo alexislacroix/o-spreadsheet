@@ -10,16 +10,18 @@ import { CfTerms } from "../../../translations_terms";
 
 interface Props {
   conditionalFormat: ConditionalFormat;
-  onPreviewClick: () => void;
   onMouseDown: (ev: MouseEvent) => void;
   class: string;
 }
 
-export class ConditionalFormatPreview extends Component<Props, SpreadsheetChildEnv> {
-  static template = "o-spreadsheet-ConditionalFormatPreview";
-
+export class ConditionalFormattingPreview extends Component<Props, SpreadsheetChildEnv> {
+  static template = "o-spreadsheet-ConditionalFormattingPreview";
+  static props = {
+    conditionalFormat: Object,
+    onMouseDown: Function,
+    class: String,
+  };
   icons = ICONS;
-
   private ref = useRef("cfPreview");
 
   setup() {
@@ -61,6 +63,13 @@ export class ConditionalFormatPreview extends Component<Props, SpreadsheetChildE
     }
   }
 
+  editConditionalFormat() {
+    this.env.replaceSidePanel("ConditionalFormattingEditor", "ConditionalFormatting", {
+      cf: this.props.conditionalFormat,
+      isNewCf: false,
+    });
+  }
+
   deleteConditionalFormat() {
     this.env.model.dispatch("REMOVE_CONDITIONAL_FORMAT", {
       id: this.props.conditionalFormat.id,
@@ -81,10 +90,3 @@ export class ConditionalFormatPreview extends Component<Props, SpreadsheetChildE
     }));
   }
 }
-
-ConditionalFormatPreview.props = {
-  conditionalFormat: Object,
-  onPreviewClick: Function,
-  onMouseDown: Function,
-  class: String,
-};
