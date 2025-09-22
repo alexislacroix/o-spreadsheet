@@ -52,8 +52,11 @@ export function adaptStringRange(
   }
 
   const change = applyChange.applyChange(range);
-  if (change.changeType === "NONE" || change.changeType === "REMOVE") {
+  if (change.changeType === "NONE") {
     return sheetXC;
+  }
+  if (change.changeType === "REMOVE") {
+    return "#REF";
   }
 
   return getRangeString(change.range, defaultSheetId, getSheetNameGetter(applyChange));
