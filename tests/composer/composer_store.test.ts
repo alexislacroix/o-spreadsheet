@@ -137,6 +137,20 @@ describe("edition", () => {
     expect(getCellText(model, "A1")).toBe('=sum("((((((((")');
   });
 
+  test("Ctrl+Shift+Enter wraps formula in braces", () => {
+    composerStore.startEdition("=SUM(A1:A2)");
+    composerStore.autoCompleteOrStop(undefined, { wrapInArray: true });
+    expect(getCellText(model, "A1")).toBe("={SUM(A1:A2)}");
+  });
+
+  test("array wrapping flag resets after use", () => {
+    composerStore.startEdition("=SUM(A1:A2)");
+    composerStore.autoCompleteOrStop(undefined, { wrapInArray: true });
+    composerStore.startEdition("=SUM(A1:A2)");
+    composerStore.autoCompleteOrStop("down");
+    expect(getCellText(model, "A1")).toBe("=SUM(A1:A2)");
+  });
+
   test("select cells in another sheet", () => {
     const sheet2 = "42";
     createSheet(model, { sheetId: sheet2 });

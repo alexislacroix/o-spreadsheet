@@ -102,6 +102,29 @@ describe("parser", () => {
     });
   });
 
+  test("can parse array literal", () => {
+    expect(parse("={1,2;3,4}")).toMatchObject({
+      type: "ARRAY",
+      rows: [
+        [
+          { type: "NUMBER", value: 1 },
+          { type: "NUMBER", value: 2 },
+        ],
+        [
+          { type: "NUMBER", value: 3 },
+          { type: "NUMBER", value: 4 },
+        ],
+      ],
+    });
+  });
+
+  test("array literal keeps empty entries", () => {
+    expect(parse("={1,,}")).toMatchObject({
+      type: "ARRAY",
+      rows: [[{ type: "NUMBER", value: 1 }, { type: "EMPTY" }, { type: "EMPTY" }]],
+    });
+  });
+
   test("can parse unary operations", () => {
     expect(parse("-1")).toMatchObject({
       type: "UNARY_OPERATION",
@@ -451,6 +474,7 @@ describe("Converting AST to string", () => {
     expect(astToFormula(parse("1*-(1+2)"))).toBe("1*-(1+2)");
     expect(astToFormula(parse("1%"))).toBe("1%");
     expect(astToFormula(parse("(1+2)%"))).toBe("(1+2)%");
+    expect(astToFormula(parse("={1,2;3,4}"))).toBe("{1,2;3,4}");
   });
   test("Convert binary operator", () => {
     expect(astToFormula(parse("89-45"))).toBe("89-45");

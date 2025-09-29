@@ -199,6 +199,7 @@ export class Composer extends Component<CellComposerProps, SpreadsheetChildEnv> 
   keyMapping: { [key: string]: Function } = {
     Enter: (ev: KeyboardEvent) => this.processEnterKey(ev, "down"),
     "Shift+Enter": (ev: KeyboardEvent) => this.processEnterKey(ev, "up"),
+    "Ctrl+Shift+Enter": (ev: KeyboardEvent) => this.processArrayEnterKey(ev),
     "Alt+Enter": this.processNewLineEvent,
     "Ctrl+Enter": this.processNewLineEvent,
     Escape: this.processEscapeKey,
@@ -317,6 +318,14 @@ export class Composer extends Component<CellComposerProps, SpreadsheetChildEnv> 
     ev.stopPropagation();
     if (!this.assistant.forcedClosed) {
       this.props.composerStore.autoCompleteOrStop(direction);
+    }
+  }
+
+  private processArrayEnterKey(ev: KeyboardEvent) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    if (!this.assistant.forcedClosed) {
+      this.props.composerStore.autoCompleteOrStop(undefined, { wrapInArray: true });
     }
   }
 

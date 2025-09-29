@@ -90,6 +90,7 @@ export abstract class AbstractComposerStore extends SpreadsheetStore {
 
   hoveredTokens: EnrichedToken[] = [];
   hoveredContentEvaluation: string = "";
+  private wrapContentInArrayOnConfirm = false;
 
   private autoCompleteKeepLast = new KeepLast<AutoCompleteProvider | undefined>();
   protected notificationStore = this.get(NotificationStore);
@@ -456,10 +457,13 @@ export abstract class AbstractComposerStore extends SpreadsheetStore {
 
   protected _stopEdition() {
     if (this.editionMode !== "inactive") {
+      const shouldWrapContent = this.wrapContentInArrayOnConfirm;
       this.cancelEditionAndActivateSheet();
+      this.wrapContentInArrayOnConfirm = shouldWrapContent;
       let content = this.getCurrentCanonicalContent();
       const didChange = this.initialContent !== content;
       if (!didChange) {
+        this.wrapContentInArrayOnConfirm = false;
         return;
       }
       if (content) {
@@ -468,8 +472,12 @@ export abstract class AbstractComposerStore extends SpreadsheetStore {
           if (missing > 0) {
             content += concat(new Array(missing).fill(")"));
           }
+          if (this.wrapContentInArrayOnConfirm && !content.startsWith("={")) {
+            content = content.replace(/^=/, "={") + "}";
+          }
         }
       }
+      this.wrapContentInArrayOnConfirm = false;
       this.confirmEdition(content);
     }
   }
@@ -501,6 +509,7 @@ export abstract class AbstractComposerStore extends SpreadsheetStore {
     this.colorIndexByRange = {};
     this.hoveredTokens = [];
     this.hoveredContentEvaluation = "";
+    this.wrapContentInArrayOnConfirm = false;
   }
 
   /**
@@ -918,7 +927,7 @@ export abstract class AbstractComposerStore extends SpreadsheetStore {
     this.autoComplete.hide();
   }
 
-  autoCompleteOrStop(direction: Direction) {
+  autoCompleteOrStop(direction?: Direction, options?: { wrapInArray?: boolean }) {
     if (this.editionMode !== "inactive") {
       const autoComplete = this.autoComplete;
       if (autoComplete.provider && autoComplete.selectedIndex !== undefined) {
@@ -928,7 +937,22 @@ export abstract class AbstractComposerStore extends SpreadsheetStore {
           return;
         }
       }
-      this.stopEdition(direction);
+      if (options?.wrapInArray) {
+        this.stopEditionAsArray(direction);
+      } else {
+        this.stopEdition(direction);
+      }
+    }
+  }
+
+  private stopEditionAsArray(direction?: Direction) {
+    if (this.editionMode === "inactive") {
+      return;
+    }
+    this.wrapContentInArrayOnConfirm = true;
+    this.stopEdition(direction);
+    if ((this.editionMode as EditionMode) !== "inactive") {
+      this.wrapContentInArrayOnConfirm = false;
     }
   }
 
@@ -964,7 +988,9 @@ export abstract class AbstractComposerStore extends SpreadsheetStore {
       let currentToken = tokenAtCursor;
       // check previous token
       while (
-        !["ARG_SEPARATOR", "LEFT_PAREN", "OPERATOR"].includes(currentToken.type) ||
+        !["ARG_SEPARATOR", "ARRAY_ROW_SEPARATOR", "LEFT_PAREN", "LEFT_BRACE", "OPERATOR"].includes(
+          currentToken.type
+        ) ||
         POSTFIX_UNARY_OPERATORS.includes(currentToken.value)
       ) {
         if (currentToken.type !== "SPACE" || count < 1) {
@@ -979,7 +1005,13 @@ export abstract class AbstractComposerStore extends SpreadsheetStore {
       // check next token
       while (
         currentToken &&
-        !["ARG_SEPARATOR", "RIGHT_PAREN", "OPERATOR"].includes(currentToken.type)
+        ![
+          "ARG_SEPARATOR",
+          "ARRAY_ROW_SEPARATOR",
+          "RIGHT_PAREN",
+          "RIGHT_BRACE",
+          "OPERATOR",
+        ].includes(currentToken.type)
       ) {
         if (currentToken.type !== "SPACE") {
           return false;

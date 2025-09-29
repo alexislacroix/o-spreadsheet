@@ -97,6 +97,21 @@ describe("tokenizer", () => {
     ]);
   });
 
+  test("array literal tokens", () => {
+    expect(tokenize("={1,2;3,4}")).toEqual([
+      { type: "OPERATOR", value: "=" },
+      { type: "LEFT_BRACE", value: "{" },
+      { type: "NUMBER", value: "1" },
+      { type: "ARG_SEPARATOR", value: "," },
+      { type: "NUMBER", value: "2" },
+      { type: "ARRAY_ROW_SEPARATOR", value: ";" },
+      { type: "NUMBER", value: "3" },
+      { type: "ARG_SEPARATOR", value: "," },
+      { type: "NUMBER", value: "4" },
+      { type: "RIGHT_BRACE", value: "}" },
+    ]);
+  });
+
   test("can tokenize various number expressions", () => {
     expect(tokenize("1.1")).toEqual([{ type: "NUMBER", value: "1.1" }]);
     expect(tokenize("1e3")).toEqual([{ type: "NUMBER", value: "1e3" }]);
