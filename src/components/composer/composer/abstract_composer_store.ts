@@ -81,7 +81,6 @@ export abstract class AbstractComposerStore extends SpreadsheetStore {
   editionMode: EditionMode = "inactive";
   sheetId: UID = "";
   protected _currentContent: string = "";
-  protected wrapContentInArrayOnConfirm = false;
   currentTokens: EnrichedToken[] = [];
   protected selectionStart: number = 0;
   protected selectionEnd: number = 0;
@@ -174,7 +173,6 @@ export abstract class AbstractComposerStore extends SpreadsheetStore {
   }
 
   cancelEdition() {
-    this.wrapContentInArrayOnConfirm = false;
     this.resetContent();
     this.cancelEditionAndActivateSheet();
   }
@@ -449,7 +447,6 @@ export abstract class AbstractComposerStore extends SpreadsheetStore {
     this.sheetId = sheetId;
     this.row = row;
     this.editionMode = "editing";
-    this.wrapContentInArrayOnConfirm = false;
     this.initialContent = this.getComposerContent({ sheetId, col, row });
     this.setContent(str || this.initialContent, selection);
     this.colorIndexByRange = {};
@@ -463,7 +460,6 @@ export abstract class AbstractComposerStore extends SpreadsheetStore {
       let content = this.getCurrentCanonicalContent();
       const didChange = this.initialContent !== content;
       if (!didChange) {
-        this.wrapContentInArrayOnConfirm = false;
         return;
       }
       if (content) {
@@ -472,17 +468,9 @@ export abstract class AbstractComposerStore extends SpreadsheetStore {
           if (missing > 0) {
             content += concat(new Array(missing).fill(")"));
           }
-          if (this.wrapContentInArrayOnConfirm) {
-            const body = content.slice(1);
-            const trimmed = body.trim();
-            if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) {
-              content = content.replace(/^=/, "={") + "}";
-            }
-          }
         }
       }
       this.confirmEdition(content);
-      this.wrapContentInArrayOnConfirm = false;
     }
   }
 
@@ -930,19 +918,15 @@ export abstract class AbstractComposerStore extends SpreadsheetStore {
     this.autoComplete.hide();
   }
 
-  autoCompleteOrStop(direction?: Direction, options?: { wrapInArray?: boolean }) {
+  autoCompleteOrStop(direction?: Direction) {
     if (this.editionMode !== "inactive") {
-      const shouldWrap = options?.wrapInArray ?? false;
       const autoComplete = this.autoComplete;
-      if (!shouldWrap && autoComplete.provider && autoComplete.selectedIndex !== undefined) {
+      if (autoComplete.provider && autoComplete.selectedIndex !== undefined) {
         const autoCompleteValue = autoComplete.provider.proposals[autoComplete.selectedIndex]?.text;
         if (autoCompleteValue) {
           this.autoComplete.provider?.selectProposal(autoCompleteValue);
           return;
         }
-      }
-      if (shouldWrap) {
-        this.wrapContentInArrayOnConfirm = true;
       }
       this.stopEdition(direction);
     }

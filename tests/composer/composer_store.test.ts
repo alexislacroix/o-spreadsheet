@@ -137,15 +137,15 @@ describe("edition", () => {
     expect(getCellText(model, "A1")).toBe('=sum("((((((((")');
   });
 
-  test("Ctrl+Shift+Enter wraps the confirmed formula in array braces", () => {
+  test("Confirming a formula does not add array braces automatically", () => {
     composerStore.startEdition("=SUM(1,2)");
-    composerStore.autoCompleteOrStop(undefined, { wrapInArray: true });
-    expect(getCell(model, "A1")?.content).toBe("={SUM(1,2)}");
+    composerStore.stopEdition();
+    expect(getCell(model, "A1")?.content).toBe("=SUM(1,2)");
   });
 
-  test("Ctrl+Shift+Enter does not double wrap formulas already in braces", () => {
+  test("Composer preserves manually typed array literals", () => {
     composerStore.startEdition("={1,2}");
-    composerStore.autoCompleteOrStop(undefined, { wrapInArray: true });
+    composerStore.stopEdition();
     expect(getCell(model, "A1")?.content).toBe("={1,2}");
   });
 
