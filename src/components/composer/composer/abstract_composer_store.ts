@@ -90,7 +90,6 @@ export abstract class AbstractComposerStore extends SpreadsheetStore {
 
   hoveredTokens: EnrichedToken[] = [];
   hoveredContentEvaluation: string = "";
-  private wrapContentInArrayOnConfirm = false;
 
   private autoCompleteKeepLast = new KeepLast<AutoCompleteProvider | undefined>();
   protected notificationStore = this.get(NotificationStore);
@@ -457,13 +456,10 @@ export abstract class AbstractComposerStore extends SpreadsheetStore {
 
   protected _stopEdition() {
     if (this.editionMode !== "inactive") {
-      const shouldWrapContent = this.wrapContentInArrayOnConfirm;
       this.cancelEditionAndActivateSheet();
-      this.wrapContentInArrayOnConfirm = shouldWrapContent;
       let content = this.getCurrentCanonicalContent();
       const didChange = this.initialContent !== content;
       if (!didChange) {
-        this.wrapContentInArrayOnConfirm = false;
         return;
       }
       if (content) {
@@ -472,12 +468,8 @@ export abstract class AbstractComposerStore extends SpreadsheetStore {
           if (missing > 0) {
             content += concat(new Array(missing).fill(")"));
           }
-          if (this.wrapContentInArrayOnConfirm && !content.startsWith("={")) {
-            content = content.replace(/^=/, "={") + "}";
-          }
         }
       }
-      this.wrapContentInArrayOnConfirm = false;
       this.confirmEdition(content);
     }
   }
@@ -509,7 +501,6 @@ export abstract class AbstractComposerStore extends SpreadsheetStore {
     this.colorIndexByRange = {};
     this.hoveredTokens = [];
     this.hoveredContentEvaluation = "";
-    this.wrapContentInArrayOnConfirm = false;
   }
 
   /**
@@ -927,7 +918,7 @@ export abstract class AbstractComposerStore extends SpreadsheetStore {
     this.autoComplete.hide();
   }
 
-  autoCompleteOrStop(direction?: Direction, options?: { wrapInArray?: boolean }) {
+  autoCompleteOrStop(direction?: Direction) {
     if (this.editionMode !== "inactive") {
       const autoComplete = this.autoComplete;
       if (autoComplete.provider && autoComplete.selectedIndex !== undefined) {
@@ -937,22 +928,7 @@ export abstract class AbstractComposerStore extends SpreadsheetStore {
           return;
         }
       }
-      if (options?.wrapInArray) {
-        this.stopEditionAsArray(direction);
-      } else {
-        this.stopEdition(direction);
-      }
-    }
-  }
-
-  private stopEditionAsArray(direction?: Direction) {
-    if (this.editionMode === "inactive") {
-      return;
-    }
-    this.wrapContentInArrayOnConfirm = true;
-    this.stopEdition(direction);
-    if ((this.editionMode as EditionMode) !== "inactive") {
-      this.wrapContentInArrayOnConfirm = false;
+      this.stopEdition(direction);
     }
   }
 
