@@ -357,7 +357,7 @@ describe("Localized tokenizer", () => {
   });
 
   test("Can change argument separator", () => {
-    const locale = { ...DEFAULT_LOCALE, formulaArgSeparator: "空" };
+    const locale = { ...DEFAULT_LOCALE, formulaArgSeparator: "空", formulaArrayRowSeparator: ";" };
     expect(tokenize("=SUM(5空 8.5)", locale)).toEqual([
       { type: "OPERATOR", value: "=" },
       { type: "SYMBOL", value: "SUM" },
@@ -367,6 +367,27 @@ describe("Localized tokenizer", () => {
       { type: "SPACE", value: " " },
       { type: "NUMBER", value: "8.5" },
       { type: "RIGHT_PAREN", value: ")" },
+    ]);
+  });
+
+  test("Uses locale-specific array row separator", () => {
+    const locale = {
+      ...DEFAULT_LOCALE,
+      decimalSeparator: ",",
+      formulaArgSeparator: ";",
+      formulaArrayRowSeparator: "\\",
+    };
+    expect(tokenize("={1;2\\3;4}", locale)).toEqual([
+      { type: "OPERATOR", value: "=" },
+      { type: "LEFT_BRACE", value: "{" },
+      { type: "NUMBER", value: "1" },
+      { type: "ARG_SEPARATOR", value: ";" },
+      { type: "NUMBER", value: "2" },
+      { type: "ARRAY_ROW_SEPARATOR", value: "\\" },
+      { type: "NUMBER", value: "3" },
+      { type: "ARG_SEPARATOR", value: ";" },
+      { type: "NUMBER", value: "4" },
+      { type: "RIGHT_BRACE", value: "}" },
     ]);
   });
 });

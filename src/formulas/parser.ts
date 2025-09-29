@@ -312,6 +312,12 @@ function parseArrayLiteral(tokens: TokenList, leftBrace: RichToken): ASTArray {
       if (currentRow.length) {
         rows.push(currentRow);
       }
+      const expectedLength = rows[0]?.length ?? 0;
+      if (rows.some((row) => row.length !== expectedLength)) {
+        throw new BadExpressionError(
+          _t("Each row in an array literal must contain the same number of elements.")
+        );
+      }
       return {
         type: "ARRAY",
         rows,

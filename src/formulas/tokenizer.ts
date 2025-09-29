@@ -128,9 +128,13 @@ function tokenizeArgsSeparator(chars: TokenizingChars, locale: Locale): Token | 
 }
 
 function tokenizeArrayRowSeparator(chars: TokenizingChars, locale: Locale): Token | null {
-  if (chars.current === ";" && locale.formulaArgSeparator !== ";") {
+  const rowSeparator = locale.formulaArrayRowSeparator;
+  if (!rowSeparator) {
+    return null;
+  }
+  if (chars.current === rowSeparator) {
     chars.shift();
-    return { type: "ARRAY_ROW_SEPARATOR", value: ";" };
+    return { type: "ARRAY_ROW_SEPARATOR", value: rowSeparator };
   }
   return null;
 }

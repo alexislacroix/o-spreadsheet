@@ -137,6 +137,18 @@ describe("edition", () => {
     expect(getCellText(model, "A1")).toBe('=sum("((((((((")');
   });
 
+  test("Ctrl+Shift+Enter wraps the confirmed formula in array braces", () => {
+    composerStore.startEdition("=SUM(1,2)");
+    composerStore.autoCompleteOrStop(undefined, { wrapInArray: true });
+    expect(getCell(model, "A1")?.content).toBe("={SUM(1,2)}");
+  });
+
+  test("Ctrl+Shift+Enter does not double wrap formulas already in braces", () => {
+    composerStore.startEdition("={1,2}");
+    composerStore.autoCompleteOrStop(undefined, { wrapInArray: true });
+    expect(getCell(model, "A1")?.content).toBe("={1,2}");
+  });
+
   test("select cells in another sheet", () => {
     const sheet2 = "42";
     createSheet(model, { sheetId: sheet2 });
@@ -1004,6 +1016,7 @@ describe("edition", () => {
           formulaArgSeparator: ";",
           decimalSeparator: ",",
           thousandsSeparator: " ",
+          formulaArrayRowSeparator: "\\",
         });
         editCell(model, "A1", "=SUM(B2,5)");
         expect(getEvaluatedCell(model, "A1").type).toBe(CellValueType.error);
@@ -1017,6 +1030,7 @@ describe("edition", () => {
           decimalSeparator: ",",
           formulaArgSeparator: ";",
           thousandsSeparator: " ",
+          formulaArrayRowSeparator: "\\",
         });
         editCell(model, "A1", "=SUM(3,14; 5)");
         expect(getEvaluatedCell(model, "A1").type).toBe(CellValueType.number);

@@ -125,6 +125,12 @@ describe("parser", () => {
     });
   });
 
+  test("array literal with mismatched row length throws", () => {
+    expect(() => parse("={1,2;3}")).toThrow(
+      "Each row in an array literal must contain the same number of elements."
+    );
+  });
+
   test("can parse unary operations", () => {
     expect(parse("-1")).toMatchObject({
       type: "UNARY_OPERATION",
